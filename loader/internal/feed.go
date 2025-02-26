@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+const workers = 3
+
 type Feed struct {
 	RSS      xml.Name  `xml:"rss"`
 	Title    string    `xml:"channel>title"`
@@ -27,22 +29,33 @@ func (f *Feed) SaveLatest(folder string) error {
 }
 
 func (f *Feed) SaveAll(folder string) {
-	load := make(chan int, 2)
+	pool := make(chan Episode, len(f.Episodes))
+	done := make(chan bool)
 
-	// todo : refactor
-	for i := range 2 {
+	for i := range workers {
+		// starts worker
 		go func() {
-			_, err := f.Episodes[i].SaveAudio(folder)
-			if err != nil {
-				panic(err)
+			for {
+				ep, more := <-pool
+				if more {
+					fmt.Printf("w: %d take ep: %d\n", i, ep.ID)
+					ep.SaveAudio(folder)
+				} else {
+					done <- true
+					return
+				}
 			}
-			load <- i
 		}()
 	}
 
-	for range 2 {
-		fmt.Printf("processed: %d\n", <-load)
+	// fills the pool
+	for _, ep := range f.Episodes {
+		pool <- ep
 	}
+	close(pool)
+
+	// waiting for complete
+	<-done
 }
 
 func NewFeed(url string) (Feed, error) {
