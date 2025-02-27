@@ -10,23 +10,23 @@ import (
 )
 
 type Image struct {
-	URL string `xml:"href,attr"`
+	URL string `xml:"href,attr" json:"url"`
 }
 
 type Audio struct {
-	URL    string `xml:"url,attr"`
-	Length string `xml:"length,attr"`
-	Type   string `xml:"type,attr"`
+	URL    string `xml:"url,attr" json:"url"`
+	Length string `xml:"length,attr" json:"length"`
+	Type   string `xml:"type,attr" json:"type"`
 }
 
 type Episode struct {
-	ID          int
-	Link        string `xml:"link"`
-	Title       string `xml:"title"`
-	Description string `xml:"summary"`
-	PublishedAt string `xml:"pubDate"`
-	Image       Image  `xml:"image"`
-	Audio       Audio  `xml:"enclosure"`
+	ID          int    `json:"id"`
+	Link        string `xml:"link" json:"link"`
+	Title       string `xml:"title" json:"title"`
+	Description string `xml:"summary" json:"description"`
+	PublishedAt string `xml:"pubDate" json:"publishedAt"`
+	Image       Image  `xml:"image" json:"image"`
+	Audio       Audio  `xml:"enclosure" json:"audio"`
 }
 
 func (e *Episode) getAudioFilePath(folder string) string {

@@ -1,18 +1,23 @@
 package internal
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 const workers = 3
 
 type Feed struct {
-	RSS      xml.Name  `xml:"rss"`
-	Title    string    `xml:"channel>title"`
-	Episodes []Episode `xml:"channel>item"`
+	RSS           xml.Name  `xml:"rss" json:"-"`
+	URL           string    `xml:"-" json:"url"`
+	Title         string    `xml:"channel>title" json:"title"`
+	LastEpisodeId int       `json:"lastEpisodeId"`
+	Episodes      []Episode `xml:"channel>item" json:"episodes"`
 }
 
 func (f *Feed) init() {
@@ -21,15 +26,28 @@ func (f *Feed) init() {
 		f.Episodes[index].ID = count
 		count -= 1
 	}
+
+	f.LastEpisodeId = len(f.Episodes)
 }
 
-func (f *Feed) SaveLatest(folder string) error {
-	_, err := f.Episodes[0].SaveAudio(folder)
-	return err
+func (f *Feed) Cache(folder string) (string, error) {
+	cacheFilePath := filepath.Join(folder, "metadata.json")
+
+	json, err := json.MarshalIndent(f, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to json feed: %w", err)
+	}
+
+	err = os.WriteFile(cacheFilePath, json, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to save cache file: %w", err)
+	}
+
+	return cacheFilePath, nil
 }
 
-func (f *Feed) SaveAll(folder string) {
-	pool := make(chan Episode, len(f.Episodes))
+func (f *Feed) SaveEpisodes(episodes []Episode, out string) {
+	pool := make(chan Episode, len(episodes))
 	done := make(chan bool)
 
 	for i := range workers {
@@ -39,7 +57,7 @@ func (f *Feed) SaveAll(folder string) {
 				ep, more := <-pool
 				if more {
 					fmt.Printf("w: %d take ep: %d\n", i, ep.ID)
-					ep.SaveAudio(folder)
+					ep.SaveAudio(out)
 				} else {
 					done <- true
 					return
@@ -49,7 +67,7 @@ func (f *Feed) SaveAll(folder string) {
 	}
 
 	// fills the pool
-	for _, ep := range f.Episodes {
+	for _, ep := range episodes {
 		pool <- ep
 	}
 	close(pool)
@@ -58,8 +76,9 @@ func (f *Feed) SaveAll(folder string) {
 	<-done
 }
 
-func NewFeed(url string) (Feed, error) {
+func NewFeedFromURL(url string) (Feed, error) {
 	feed := Feed{}
+	feed.URL = url
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -78,5 +97,21 @@ func NewFeed(url string) (Feed, error) {
 	}
 
 	feed.init()
+	return feed, nil
+}
+
+func NewFeedFromCache(path string) (Feed, error) {
+	feed := Feed{}
+
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return feed, fmt.Errorf("failed to read metadata file: %w", err)
+	}
+
+	err = json.Unmarshal(file, &feed)
+	if err != nil {
+		return feed, fmt.Errorf("failed to parse metadata: %w", err)
+	}
+
 	return feed, nil
 }
