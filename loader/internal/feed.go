@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const workers = 3
+const maxWorkers = 3
 
 type Feed struct {
 	RSS           xml.Name  `xml:"rss" json:"-"`
@@ -50,17 +50,23 @@ func (f *Feed) SaveEpisodes(episodes []Episode, out string) {
 	pool := make(chan Episode, len(episodes))
 	done := make(chan bool)
 
-	for i := range workers {
+	workers := min(len(episodes), maxWorkers)
+
+	for range workers {
 		// starts worker
 		go func() {
 			for {
 				ep, more := <-pool
-				if more {
-					fmt.Printf("w: %d take ep: %d\n", i, ep.ID)
-					ep.SaveAudio(out)
-				} else {
+				if !more {
 					done <- true
 					return
+				}
+
+				_, err := ep.SaveAudio(out)
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Printf("downloaded episode #%d\n", ep.ID)
 				}
 			}
 		}()

@@ -29,12 +29,12 @@ type Episode struct {
 	Audio       Audio  `xml:"enclosure" json:"audio"`
 }
 
-func (e *Episode) getAudioFilePath(folder string) string {
+func (e *Episode) getAudioFilePath(out string) string {
 	src := strings.Split(e.Audio.URL, ".")
-	return filepath.Join(folder, fmt.Sprintf("%d.%s", e.ID, src[len(src)-1]))
+	return filepath.Join(out, fmt.Sprintf("%d.%s", e.ID, src[len(src)-1]))
 }
 
-func (e *Episode) SaveAudio(folder string) (string, error) {
+func (e *Episode) SaveAudio(out string) (string, error) {
 	resp, err := http.Get(e.Audio.URL)
 	if err != nil {
 		return "", fmt.Errorf("failed to download episode audio from URL '%s': %w", e.Audio.URL, err)
@@ -45,11 +45,11 @@ func (e *Episode) SaveAudio(folder string) (string, error) {
 		return "", fmt.Errorf("audio resource is not accessible '%d': %w", resp.StatusCode, err)
 	}
 
-	audioFilePath := e.getAudioFilePath(folder)
+	audioFilePath := e.getAudioFilePath(out)
 
 	dist, err := os.Create(audioFilePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to create a file ('%s') in folder '%s': %w", audioFilePath, folder, err)
+		return "", fmt.Errorf("failed to create a file ('%s') in folder '%s': %w", audioFilePath, out, err)
 	}
 	defer dist.Close()
 
