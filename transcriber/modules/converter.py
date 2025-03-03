@@ -5,7 +5,7 @@ from pydub import AudioSegment
 
 MODEL_FRAME_RATE = 16000 
 
-def get_episodes_path(path):
+def get_files(path):
   files = []
   try:
     for file in os.listdir(path):
@@ -21,7 +21,7 @@ def get_episodes_path(path):
 def get_wav_filename(path, out):
   return os.path.join(out, f'{os.path.splitext(os.path.basename(path))[0]}.wav')
 
-def preprocess(files, out):
+def process(files, out):
   for file in files:
     filepath = get_wav_filename(file, out)
     sound = AudioSegment.from_file(file)
@@ -32,3 +32,15 @@ def preprocess(files, out):
     # save wav file
     sound.export(get_wav_filename(file, out), format='wav')
     print(f'saved processed file to `{filepath}`')
+
+def main(src, ep, out):
+  if (src == None and ep == None) or (src != None and ep != None):
+      print("error: one of source parameters should be present")
+      sys.exit(1)
+
+  # prepare list of files for preprocessing
+  files = [ep] if ep != None else get_files(src)
+  print(f'start process `{len(files)}` file(s)')
+
+  # start preprocessing
+  process(files, out)
