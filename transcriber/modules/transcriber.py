@@ -1,8 +1,14 @@
 import sys
 import os
 
-from pydub import AudioSegment 
-from pydub.silence import detect_silence
+import torch
+import soundfile as sf
+from transformers import GenerationConfig,WhisperProcessor,AutoModelForSpeechSeq2Seq
+
+# initiate whisper model 
+processor = WhisperProcessor.from_pretrained('openai/whisper-base')
+model = AutoModelForSpeechSeq2Seq.from_pretrained('mitchelldehaven/whisper-medium-uk')
+model.generation_config = GenerationConfig.from_pretrained('openai/whisper-base')
 
 def get_files(path):
   files = []
@@ -17,15 +23,16 @@ def get_files(path):
 
   return files
 
-def get_pauses(filepath):
-  sound = AudioSegment.from_file(filepath)
-  # todo : tune parameters
-  silences = detect_silence(sound, min_silence_len=500, silence_thresh=-16)
-  return [(start / 1000.0, end / 1000.0) for start, end in silences]
-
 def transcribe(file, out):
-  pauses = get_pauses(file)
-  print(pauses)
+  audio_input, sample_rate = sf.read(file)
+
+  # todo : read all input in chunks
+  chunk = audio_input[0:int(30 * sample_rate)]
+  inputs = processor(chunk, sampling_rate=sample_rate, return_tensors='pt', return_attention_mask=True)  
+  predicted_ids = model.generate(inputs.input_features, attention_mask=inputs.attention_mask)
+  transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)
+  print(transcription)
+  
   
 
 def main(src, ep, out):
