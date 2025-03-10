@@ -1,21 +1,21 @@
 import sys
 import os
 
-import torch
 import soundfile as sf
-from transformers import GenerationConfig,WhisperProcessor,AutoModelForSpeechSeq2Seq
+from transformers import WhisperProcessor,AutoModelForSpeechSeq2Seq
+
+MODEL = 'mitchelldehaven/whisper-medium-uk'
 
 # initiate whisper model 
-processor = WhisperProcessor.from_pretrained('openai/whisper-base')
-model = AutoModelForSpeechSeq2Seq.from_pretrained('mitchelldehaven/whisper-medium-uk')
-model.generation_config = GenerationConfig.from_pretrained('openai/whisper-base')
+processor = WhisperProcessor.from_pretrained(MODEL)
+model = AutoModelForSpeechSeq2Seq.from_pretrained(MODEL)
 
 def get_files(path):
   files = []
   try:
     for file in os.listdir(path):
       # check file format to skip non audio
-      if file.endswith('.mp3') or file.endswith('.m4a'):
+      if file.endswith('.wav'):
         files.append(os.path.join(path, file))
   except Exception as e:
     print(f'error: failed to list folder {path}:\n{e}')
@@ -26,13 +26,36 @@ def get_files(path):
 def transcribe(file, out):
   audio_input, sample_rate = sf.read(file)
 
-  # todo : read all input in chunks
-  chunk = audio_input[0:int(30 * sample_rate)]
-  inputs = processor(chunk, sampling_rate=sample_rate, return_tensors='pt', return_attention_mask=True)  
-  predicted_ids = model.generate(inputs.input_features, attention_mask=inputs.attention_mask)
-  transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)
-  print(transcription)
-  
+  # todo : tune
+  chunk_size = int(25 * sample_rate) # 25 sec
+  overlap_size = int(1 * sample_rate)
+
+  transcribes = []
+  offset = 0
+
+  while offset <= len(audio_input):
+    chunk_start = offset if offset == 0 else offset - overlap_size
+    chunk_end = offset + chunk_size + overlap_size
+
+    print(f'transcribe chunk {int(chunk_start / sample_rate)}:{int(chunk_end / sample_rate)}s')
+    if offset > int(120 * sample_rate):
+      break
+
+    chunk = audio_input[chunk_start:chunk_end]
+
+    inputs = processor(chunk, sampling_rate=sample_rate, return_tensors='pt', return_attention_mask=True)
+    predicted_ids = model.generate(inputs.input_features, attention_mask=inputs.attention_mask)
+
+    result = processor.batch_decode(predicted_ids, skip_special_tokens=True)
+    transcribes.append(result[0])
+
+    offset += offset + chunk_size
+
+  # todo : research chunks merge
+
+  print(transcribes)
+
+  # todo : save transcriptions
   
 
 def main(src, ep, out):
