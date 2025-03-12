@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 import soundfile as sf
 from transformers import WhisperProcessor,AutoModelForSpeechSeq2Seq
@@ -23,39 +24,43 @@ def get_files(path):
 
   return files
 
+def get_transcribe_filename(path, out):
+  return os.path.join(out, f'{os.path.splitext(os.path.basename(path))[0]}.json')
+
 def transcribe(file, out):
   audio_input, sample_rate = sf.read(file)
 
-  # todo : tune
   chunk_size = int(25 * sample_rate) # 25 sec
-  overlap_size = int(1 * sample_rate)
+  overlap_size = int(1 * sample_rate) # 1 sec
 
-  transcribes = []
+  transcribes = {}
   offset = 0
 
+  # todo : improve transcription quality by merging chunks
+  # - investigate approach with transformers pipeline function
+  # - investigate custom model configuration to provide timestamps
+
+  print(f'process file `{file}`')
   while offset <= len(audio_input):
     chunk_start = offset if offset == 0 else offset - overlap_size
     chunk_end = offset + chunk_size + overlap_size
 
-    print(f'transcribe chunk {int(chunk_start / sample_rate)}:{int(chunk_end / sample_rate)}s')
-    if offset > int(120 * sample_rate):
-      break
-
+    print(f'\ttranscribe chunk {int(chunk_start / sample_rate)}:{int(chunk_end / sample_rate)}s')
     chunk = audio_input[chunk_start:chunk_end]
 
     inputs = processor(chunk, sampling_rate=sample_rate, return_tensors='pt', return_attention_mask=True)
     predicted_ids = model.generate(inputs.input_features, attention_mask=inputs.attention_mask)
 
     result = processor.batch_decode(predicted_ids, skip_special_tokens=True)
-    transcribes.append(result[0])
+    transcribes[f'{chunk_start}:{chunk_end}'] = result[0]
 
     offset += offset + chunk_size
 
-  # todo : research chunks merge
+  filepath = get_transcribe_filename(file, out)
+  with open(filepath, 'w', encoding='utf-8') as file:
+    json.dump(transcribes, file, ensure_ascii=False, indent=2)
 
-  print(transcribes)
-
-  # todo : save transcriptions
+  print(f'saved transcription into file `{filepath}`')
   
 
 def main(src, ep, out):
