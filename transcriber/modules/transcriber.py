@@ -28,6 +28,9 @@ def get_transcribe_filename(path, out):
   return os.path.join(out, f'{os.path.splitext(os.path.basename(path))[0]}.json')
 
 def transcribe(file, out):
+
+  # todo : #improvement - choose model based on a detected language
+
   audio_input, sample_rate = sf.read(file)
 
   chunk_size = int(25 * sample_rate) # 25 sec
@@ -54,7 +57,7 @@ def transcribe(file, out):
     result = processor.batch_decode(predicted_ids, skip_special_tokens=True)
     transcribes[f'{chunk_start}:{chunk_end}'] = result[0]
 
-    offset += offset + chunk_size
+    offset += chunk_size - overlap_size
 
   filepath = get_transcribe_filename(file, out)
   with open(filepath, 'w', encoding='utf-8') as file:
