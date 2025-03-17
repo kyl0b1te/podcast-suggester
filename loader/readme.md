@@ -2,7 +2,13 @@
 
 ## Build
 
-`go build -o bin/loader ./cmd/...`
+mac
+
+`docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app -e GOOS=darwin -e GOARCH=arm64 golang:1.23-alpine go build -o bin/loader ./cmd/...`
+
+or windows
+
+`docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app -e GOOS=windows -e GOARCH=amd64 golang:1.23-alpine go build -o bin/loader ./cmd/...`
 
 ## Commands
 

@@ -3,7 +3,7 @@ name = "transcriber"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "kyl0b1te",email = "zhikiri.dev@gmail.com"}
+    {name = "kyl0b1te"}
 ]
 readme = "README.md"
 requires-python = "3.13.2"
