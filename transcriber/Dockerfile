@@ -1,18 +1,11 @@
 FROM python:3.13-alpine
 
-# Configure Poetry
-ENV POETRY_VERSION=2.1.0
-ENV POETRY_HOME=/opt/poetry
-ENV POETRY_VENV=/opt/poetry-venv
-ENV POETRY_CACHE_DIR=/opt/.cache
-
-# Install poetry separated from system interpreter
-RUN python3 -m venv $POETRY_VENV \
-	&& $POETRY_VENV/bin/pip install -U pip setuptools \
-	&& $POETRY_VENV/bin/pip install poetry==${POETRY_VERSION}
+RUN apk add --no-cache curl
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Add `poetry` to PATH
-ENV PATH="${PATH}:${POETRY_VENV}/bin"
+ENV PATH="${PATH}:$HOME/.local/bin"
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 
 WORKDIR /app
 
@@ -22,4 +15,4 @@ RUN poetry install
 
 # Run your app
 COPY . /app
-CMD [ "poetry", "run", "python", "-c", "print('Hello, World!')" ]
+CMD [ "poetry", "--version" ]
