@@ -7,7 +7,7 @@ from transformers import WhisperProcessor,AutoModelForSpeechSeq2Seq
 
 MODEL = 'mitchelldehaven/whisper-medium-uk'
 
-# initiate whisper model 
+# initiate whisper model
 processor = WhisperProcessor.from_pretrained(MODEL)
 model = AutoModelForSpeechSeq2Seq.from_pretrained(MODEL)
 
@@ -64,13 +64,13 @@ def transcribe(file, out):
     json.dump(transcribes, file, ensure_ascii=False, indent=2)
 
   print(f'saved transcription into file `{filepath}`')
-  
+
 
 def main(src, ep, out):
   if (src == None and ep == None) or (src != None and ep != None):
       print("error: one of source parameters should be present")
       sys.exit(1)
-  
+
   # prepare list of files for preprocessing
   files = [ep] if ep != None else get_files(src)
   print(f'start process `{len(files)}` file(s)')

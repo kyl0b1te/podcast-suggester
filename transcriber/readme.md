@@ -8,7 +8,7 @@
 
 ### Convert episodes for WAV
 
-* `python cli.py convert --episode=../_data/episodes/236.mp3 --out=../_data/wav`
+* `python cli.py convert --ep=../_data/episodes/236.mp3 --out=../_data/wav`
 * `python cli.py convert --src=../_data/episodes --out=../_data/wav`
 
 or shorter
@@ -18,7 +18,7 @@ or shorter
 
 ### Transcribe episodes
 
-* `python cli.py transcribe --episode=../_data/wav/236.wav --out=../_data/text`
+* `python cli.py transcribe --ep=../_data/wav/236.wav --out=../_data/text`
 * `python cli.py transcribe --src=../_data/wav --out=../_data/text`
 
 or shorter

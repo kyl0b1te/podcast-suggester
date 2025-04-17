@@ -40,7 +40,7 @@ func cache() {
 }
 
 func audio() {
-	cmd := flag.NewFlagSet("cache", flag.ExitOnError)
+	cmd := flag.NewFlagSet("audio", flag.ExitOnError)
 	url := cmd.String("rss", "", "show feed URL")
 	out := cmd.String("out", "", "cache output folder path")
 	all := cmd.Bool("all", false, "download all episodes or only latest missing (false by default)")
