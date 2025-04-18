@@ -1,7 +1,7 @@
 import sys
 import argparse
 
-from modules import converter, transcriber
+from modules import converter,transcriber
 
 CMD_CONVERT = 1
 CMD_TRANSCRIBE = 2
@@ -19,7 +19,7 @@ def cmd_convert(subparser):
   parser.add_argument('-e', '--ep', required=False, type=str,
                       help='path to the show episode')
   parser.add_argument('-o', '--out', required=True, type=str,
-                      help='path to the processed audio files')  
+                      help='path to the processed audio files')
   parser.set_defaults(cmd=CMD_CONVERT)
 
 def cmd_transcribe(subparser):
@@ -31,7 +31,7 @@ def cmd_transcribe(subparser):
   parser.add_argument('-e', '--ep', required=False, type=str,
                       help='path to the show episode in wav format')
   parser.add_argument('-o', '--out', required=True, type=str,
-                      help='path to the transcription files')  
+                      help='path to the transcription files')
   parser.set_defaults(cmd=CMD_TRANSCRIBE)
 
 def main():

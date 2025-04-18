@@ -3,7 +3,7 @@ import sys
 
 from pydub import AudioSegment
 
-MODEL_FRAME_RATE = 16000 
+MODEL_FRAME_RATE = 16000
 
 def get_files(path):
   files = []

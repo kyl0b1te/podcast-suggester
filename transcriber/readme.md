@@ -1,8 +1,9 @@
 # transcriber
 
-## Poetry
+## Development
 
-`poetry shell`
+`docker build -t podsu/transcriber:latest .`
+`docker run --rm -it -v $PWD:/app -v $PWD/../data:/data -v $PWD/.cache:/root/.cache podsu/transcriber:latest bash`
 
 ## Commands
 
