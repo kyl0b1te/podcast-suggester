@@ -9,13 +9,13 @@
 
 ### Convert episodes for WAV
 
-* `python cli.py convert --ep=../_data/episodes/236.mp3 --out=../_data/wav`
-* `python cli.py convert --src=../_data/episodes --out=../_data/wav`
+* `python cli.py convert --src=../data/episodes/1.mp3`
+* `python cli.py convert --src=../data/episodes`
 
 or shorter
 
-* `python cli.py co -e ../_data/episodes/236.mp3 -o ../_data/wav`
-* `python cli.py co -s ../_data/episodes -o ../_data/wav`
+* `python cli.py co -s ../data/episodes/1.mp3`
+* `python cli.py co -s ../data/episodes`
 
 ### Transcribe episodes
 
